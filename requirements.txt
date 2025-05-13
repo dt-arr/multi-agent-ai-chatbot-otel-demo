@@ -7,6 +7,5 @@ langgraph
 langgraph-supervisor
 langchain-tavily
 langchain[openai]
-IPython
 langchain_community
 Flask
