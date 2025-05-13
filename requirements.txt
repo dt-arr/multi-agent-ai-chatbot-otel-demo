@@ -1,0 +1,12 @@
+dotenv
+langchain-openai
+langchain-core
+python-dotenv
+traceloop-sdk
+langgraph
+langgraph-supervisor
+langchain-tavily
+langchain[openai]
+IPython
+langchain_community
+Flask
