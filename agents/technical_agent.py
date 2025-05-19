@@ -7,7 +7,7 @@ my_technical_tool = technical_tool()
 
 def technical_agent() -> create_react_agent:
   my_technical_agent = create_react_agent(
-      model="openai:gpt-4.1",
+      model="gpt-4o-mini",
       tools=[my_technical_tool],
       prompt=(
           "You are a technical analysis agent that helps users analyze stock prices and trends.\n\n"
@@ -22,7 +22,8 @@ def technical_agent() -> create_react_agent:
                 "RSI & MACD: Compute and interpret signals.\n"
                 "Fibonacci Levels: Calculate and analyze.\n"
                 "Chart Patterns (6 Months): Identify 3 key patterns.\n"
-                "Sector Comparison: Contrast with sector averages."
+                "Sector Comparison: Contrast with sector averages.\n"
+        "Get the data from the tool and pass it on to the supervisor"
       ),
       name="technical_agent",
   )

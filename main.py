@@ -11,6 +11,7 @@ from agents.news_agent import news_agent
 from agents.fundamental_agent import fundamental_agent
 from agents.supervisor_agent import supervisor_agent
 from agents.technical_agent import technical_agent
+from agents.humorous_news_agent import humorous_news_agent
 from traceloop.sdk import Traceloop
 
 Traceloop.init()
@@ -40,7 +41,8 @@ _set_if_undefined("TAVILY_API_KEY")
 news_agent = news_agent()
 fundamental_agent = fundamental_agent()
 technical_agent = technical_agent()
-supervisor: supervisor_agent = supervisor_agent(news_agent, fundamental_agent, technical_agent).compile()
+humorous_news_agent = humorous_news_agent()
+supervisor: supervisor_agent = supervisor_agent(news_agent, fundamental_agent, technical_agent, humorous_news_agent).compile()
 
 
 # Initialize checkpointer
@@ -74,6 +76,7 @@ def process_message(user_input: str, chat_history):
       chat_history.append({"role": "assistant", "content": get_pretty_messages(chunk, last_message=True)})
       yield chat_history
   except Exception as e:
+    print(str(e))
     error_msg = f"An error occurred: {str(e)}"
     chat_history.append({"role": "assistant", "content": error_msg})
     yield chat_history
