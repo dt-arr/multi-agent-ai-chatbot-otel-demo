@@ -1,3 +1,4 @@
+import os
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -15,9 +16,10 @@ vector_store: FAISS
 
 
 def humorous_news_agent() -> create_react_agent:
+  dirname = os.getcwd()
+  filename = os.path.join(dirname, 'fake_news.txt')
   # Load data from a text file
-  loader = TextLoader(
-    "/Users/asad.ali/dT/specialProjects/FinancialAIAgent-Langchain/fake_news.txt")  # Replace with your knowledge base
+  loader = TextLoader(filename)  # Replace with your knowledge base
   documents = loader.load()
   # Split data into manageable chunks
   text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
