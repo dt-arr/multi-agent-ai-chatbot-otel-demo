@@ -1,0 +1,146 @@
+import os
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import TextLoader
+from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
+from langchain_openai import OpenAIEmbeddings
+from langchain import hub
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
+# Initialize global variable
+insurance_vector_store = None
+
+
+def insurance_agent() -> create_react_agent:
+  global insurance_vector_store
+  
+  dirname = os.getcwd()
+  filename = os.path.join(dirname, 'insurance_policy.txt')
+  
+  # Debug: Check if file exists
+  print(f"Looking for file: {filename}")
+  print(f"File exists: {os.path.exists(filename)}")
+  
+  try:
+    # Load data from a text file
+    loader = TextLoader(filename)
+    documents = loader.load()
+    
+    # Debug: Check if documents loaded
+    print(f"Documents loaded: {len(documents)}")
+    if documents:
+      print(f"First document length: {len(documents[0].page_content)}")
+      print(f"First 200 chars: {documents[0].page_content[:200]}")
+    
+    # Split data into manageable chunks
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    docs = text_splitter.split_documents(documents)
+    
+    # Debug: Check document splitting
+    print(f"Documents after splitting: {len(docs)}")
+    
+    # Create a vector store with embeddings
+    embeddings = OpenAIEmbeddings()
+    insurance_vector_store = FAISS.from_documents(docs, embeddings)
+    print("Insurance vector store created successfully")
+    
+  except Exception as e:
+    print(f"Error loading insurance documents: {str(e)}")
+    # Create empty vector store as fallback
+    embeddings = OpenAIEmbeddings()
+    from langchain.schema import Document
+    dummy_doc = Document(page_content="No insurance data available", metadata={})
+    insurance_vector_store = FAISS.from_documents([dummy_doc], embeddings)
+
+  agent = create_react_agent(
+    model="gpt-4o-mini",
+    tools=[retrieve_insurance_data],
+    prompt=(
+        "You are an automated AI insurance assistant for an insurance company that provides comprehensive coverage solutions. "
+        "You are responsible for providing accurate and helpful information about insurance products, policies, claims, and coverage options. "
+        "You have access to insurance data through the retrieve_insurance_data tool. "
+        "\n"
+        "INSTRUCTIONS:\n"
+        "1. For any insurance-related question, ALWAYS use the retrieve_insurance_data tool first\n"
+        "2. If the tool returns useful information, provide a helpful answer based on that data\n"
+        "3. Format your response clearly and include specific details like phone numbers, steps, or requirements\n"
+        "4. ONLY say 'I need to research this further' if the tool returns 'No relevant information found' or 'Error' messages\n"
+        "5. Do not make up information - only use what the tool provides\n"
+        "6. Always be helpful and provide actionable guidance when you have the data\n"
+        "\n"
+        "Your goal is to help customers with insurance questions using the information available in your knowledge base."
+    ),
+    name="insurance_agent"
+  )
+  return agent
+
+
+def retrieve_insurance_data(q: str) -> str:
+  """Return insurance policy content from the vector store."""
+  print(f"Insurance tool called with query: '{q}'")
+  
+  global insurance_vector_store
+  if insurance_vector_store is None:
+    print("Vector store is None - not initialized")
+    return "Insurance data not available - vector store not initialized"
+  
+  try:
+    # Simple similarity search first for debugging
+    docs = insurance_vector_store.similarity_search(q, k=3)
+    print(f"Found {len(docs)} similar documents")
+    
+    if not docs:
+      print("No documents found")
+      return "No relevant information found"
+    
+    # Debug: Show what we found
+    for i, doc in enumerate(docs):
+      print(f"Doc {i+1} preview: {doc.page_content[:100]}...")
+    
+    # Try the simple approach first - just return concatenated content
+    result = "\n\n".join([doc.page_content for doc in docs])
+    print(f"Returning result length: {len(result)}")
+    
+    # If the simple approach works, we can switch back to the RAG chain later
+    return result
+    
+  except Exception as e:
+    print(f"Error in retrieve_insurance_data: {str(e)}")
+    return f"Error retrieving insurance data: {str(e)}"
+
+
+# Alternative RAG function (commented out for now - use this once simple retrieval works)
+def retrieve_insurance_data_with_rag(q: str) -> str:
+  """Return insurance policy content using RAG chain."""
+  print(f"Insurance RAG tool called with query: '{q}'")
+  
+  global insurance_vector_store
+  if insurance_vector_store is None:
+    return "Insurance data not available"
+  
+  try:
+    prompt = hub.pull("rlm/rag-prompt")
+
+    def format_docs(docs):
+      return "\n\n".join(doc.page_content for doc in docs)
+
+    llm = ChatOpenAI(model="gpt-4")
+    qa_chain = (
+      {
+        "context": insurance_vector_store.as_retriever() | format_docs,
+        "question": RunnablePassthrough(),
+      }
+      | prompt
+      | llm
+      | StrOutputParser()
+    )
+    output = qa_chain.invoke(q)
+    print(f"RAG output length: {len(output)}")
+    return output
+    
+  except Exception as e:
+    print(f"Error in RAG chain: {str(e)}")
+    return f"Error processing insurance query: {str(e)}"

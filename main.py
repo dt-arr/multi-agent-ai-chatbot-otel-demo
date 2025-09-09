@@ -9,6 +9,7 @@ from agents.fundamental_agent import fundamental_agent
 from agents.supervisor_agent import supervisor_agent
 from agents.technical_agent import technical_agent
 from agents.humorous_news_agent import humorous_news_agent
+from agents.insurance_agent import insurance_agent
 from traceloop.sdk import Traceloop
 import streamlit as st
 from langchain_core.messages import HumanMessage
@@ -19,6 +20,16 @@ from langchain_core.messages.tool import ToolMessage
 import asyncio
 
 load_dotenv()
+
+# Add at line number 22
+headers = { "Authorization": "Api-Token " + os.environ.get("DYNATRACE_API_TOKEN") }
+Traceloop.init(
+    app_name="FinancialAIAdvisor",
+    api_endpoint=os.environ.get("DYNATRACE_EXPORTER_OTLP_ENDPOINT"),
+    headers=headers,
+    disable_batch=True
+)
+
 
 # Create and reuse global event loop (create once and continue using)
 if "event_loop" not in st.session_state:
@@ -51,9 +62,10 @@ news_agent = news_agent()
 fundamental_agent = fundamental_agent()
 technical_agent = technical_agent()
 humorous_news_agent = humorous_news_agent()
-supervisor: supervisor_agent = supervisor_agent(news_agent, fundamental_agent, technical_agent, humorous_news_agent).compile()
+insurance_agent = insurance_agent()
+supervisor: supervisor_agent = supervisor_agent(news_agent, fundamental_agent, technical_agent, humorous_news_agent, insurance_agent).compile()
 
-st.title("💬 Stock Analysis Demo")
+st.title("💬 Financial AI Assistant & Insurance Helper")
 
 
 def print_message():
@@ -276,7 +288,7 @@ success = st.session_state.event_loop.run_until_complete(
 
 print_message()
 
-user_query = st.chat_input("💬 Enter your question")
+user_query = st.chat_input("💬 Ask about stocks, financial analysis, or insurance questions")
 if user_query:
   if st.session_state.session_initialized:
     st.chat_message("user", avatar="🧑‍💻").markdown(user_query)
