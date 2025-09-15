@@ -1,4 +1,4 @@
-SUNCORP INSURANCE POLICY KNOWLEDGE BASE
+ACME INSURANCE POLICY KNOWLEDGE BASE
 ==========================================
 **DEMO CONTENT - FOR TESTING PURPOSES ONLY**
 
@@ -160,8 +160,8 @@ Customer Service:
 - General inquiries: 13 11 11
 - Claims hotline: 13 11 55
 - Policy changes: 13 11 22
-- Online: suncorp.com.au
-- Mobile app: Suncorp Insurance App
+- Online: Acme.com.au
+- Mobile app: Acme Insurance App
 
 Business Hours:
 - Monday to Friday: 8am - 8pm

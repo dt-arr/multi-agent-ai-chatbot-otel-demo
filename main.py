@@ -19,12 +19,28 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages.tool import ToolMessage
 import asyncio
 
+import os
+import streamlit as st
+
+# Get company name from environment variable, with fallback
+COMPANY_NAME = os.getenv("COMPANY_NAME", "AcmeCorp")
+
+st.set_page_config(
+    page_title=f"{COMPANY_NAME} AI Agent",
+    page_icon="☀️",  # Insurance shield emoji
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
+
+st.title(f"☀️ {COMPANY_NAME} GPT")
+
+
 load_dotenv()
 
 # Add at line number 22
 headers = { "Authorization": "Api-Token " + os.environ.get("DYNATRACE_API_TOKEN") }
 Traceloop.init(
-    app_name="FinancialAIAdvisor",
+    app_name=os.environ.get("OTEL_SERVICE_NAME", "CustomerAIAgent"),
     api_endpoint=os.environ.get("DYNATRACE_EXPORTER_OTLP_ENDPOINT"),
     headers=headers,
     disable_batch=True
@@ -65,7 +81,6 @@ humorous_news_agent = humorous_news_agent()
 insurance_agent = insurance_agent()
 supervisor: supervisor_agent = supervisor_agent(news_agent, fundamental_agent, technical_agent, humorous_news_agent, insurance_agent).compile()
 
-st.title("💬 Financial AI Assistant & Insurance Helper")
 
 
 def print_message():

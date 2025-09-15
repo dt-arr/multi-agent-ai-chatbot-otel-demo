@@ -2,3 +2,5 @@
 *.pyc
 .idea/
 __pycache__/
+setEnv.creds.sh
+temp/
