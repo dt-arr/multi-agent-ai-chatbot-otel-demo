@@ -3,4 +3,7 @@
 .idea/
 __pycache__/
 setEnv.creds.sh
-temp/
+temp/.env.local
+
+# Virtual environment
+financial-agent/

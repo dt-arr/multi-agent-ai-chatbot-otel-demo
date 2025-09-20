@@ -19,6 +19,13 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages.tool import ToolMessage
 import asyncio
 
+# Add these imports for console tracing
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.sdk.resources import Resource
+
 import os
 import streamlit as st
 
@@ -34,11 +41,39 @@ st.set_page_config(
 
 st.title(f"☀️ {COMPANY_NAME} GPT")
 
-
 load_dotenv()
+
+# Check if console tracing is enabled
+CONSOLE_TRACES_ENABLED = os.getenv("OTEL_CONSOLE_TRACES", "false").lower() == "true"
+
+if CONSOLE_TRACES_ENABLED:
+    # Create temp directory for logs
+    os.makedirs("temp", exist_ok=True)
+    
+    # Set up logging to file in temp directory
+    import logging
+    from datetime import datetime
+    
+    # Create log filename with timestamp
+    log_filename = f"temp/console_traces_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_filename),
+            logging.StreamHandler()  # Still show in console too
+        ]
+    )
+    
+    print(f"🔍 CONSOLE TRACING ENABLED - Logs will be saved to: {log_filename}")
+    print("=" * 60)
 
 # Add at line number 22
 headers = { "Authorization": "Api-Token " + os.environ.get("DYNATRACE_API_TOKEN") }
+
+# Initialize Traceloop with console tracing support
 Traceloop.init(
     app_name=os.environ.get("OTEL_SERVICE_NAME", "CustomerAIAgent"),
     api_endpoint=os.environ.get("DYNATRACE_EXPORTER_OTLP_ENDPOINT"),
@@ -46,6 +81,18 @@ Traceloop.init(
     disable_batch=True
 )
 
+# Add console tracing if enabled
+if CONSOLE_TRACES_ENABLED:
+    # Get the existing tracer provider that Traceloop set up
+    tracer_provider = trace.get_tracer_provider()
+    
+    # Add console span exporter
+    console_exporter = ConsoleSpanExporter()
+    console_processor = BatchSpanProcessor(console_exporter)
+    tracer_provider.add_span_processor(console_processor)
+    
+    print("✅ Console span exporter added to trace provider")
+    print("=" * 60)
 
 # Create and reuse global event loop (create once and continue using)
 if "event_loop" not in st.session_state:
@@ -71,7 +118,6 @@ def _set_if_undefined(var: str):
   if not os.environ.get(var):
     os.environ[var] = getpass.getpass(f"Please provide your {var}")
 
-
 _set_if_undefined("OPENAI_API_KEY")
 
 news_agent = news_agent()
@@ -80,8 +126,6 @@ technical_agent = technical_agent()
 humorous_news_agent = humorous_news_agent()
 insurance_agent = insurance_agent()
 supervisor: supervisor_agent = supervisor_agent(news_agent, fundamental_agent, technical_agent, humorous_news_agent, insurance_agent).compile()
-
-
 
 def print_message():
   """
@@ -118,7 +162,6 @@ def print_message():
       # Skip assistant_tool messages as they are handled above
       i += 1
 
-
 async def initialize_session():
   """
   Sets the agent to Supervisor Agent
@@ -130,7 +173,6 @@ async def initialize_session():
   st.session_state.agent = supervisor
   st.session_state.session_initialized = True
   return True
-
 
 def get_streaming_callback(text_placeholder, tool_placeholder):
   """
@@ -155,6 +197,17 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
     nonlocal accumulated_text, accumulated_tool
     message_content = message.get("content", None)
 
+    # Add console logging for traces if enabled
+    if CONSOLE_TRACES_ENABLED:
+        trace_msg = f"🔍 TRACE: Message received - Type: {type(message_content)}"
+        print(trace_msg)
+        logging.info(trace_msg)
+        
+        if hasattr(message_content, 'content'):
+            content_preview = f"🔍 TRACE: Content preview: {str(message_content.content)[:100]}..."
+            print(content_preview)
+            logging.info(content_preview)
+
     if isinstance(message_content, AIMessageChunk):
       content = message_content.content
       # If content is in list form (mainly occurs in Claude models)
@@ -164,6 +217,10 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
         if message_chunk["type"] == "text":
           accumulated_text.append(message_chunk["text"])
           text_placeholder.markdown("".join(accumulated_text))
+          if CONSOLE_TRACES_ENABLED:
+              text_trace = f"🔍 TRACE: Text chunk: {message_chunk['text']}"
+              print(text_trace)
+              logging.info(text_trace)
         # Process tool use type
         elif message_chunk["type"] == "tool_use":
           if "partial_json" in message_chunk:
@@ -178,6 +235,10 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
             "🔧 Tool Call Information", expanded=True
           ):
             st.markdown("".join(accumulated_tool))
+          if CONSOLE_TRACES_ENABLED:
+              tool_trace = f"🔍 TRACE: Tool use: {message_chunk}"
+              print(tool_trace)
+              logging.info(tool_trace)
       # Process if tool_calls attribute exists (mainly occurs in OpenAI models)
       elif (
         hasattr(message_content, "tool_calls")
@@ -190,10 +251,18 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
           "🔧 Tool Call Information", expanded=True
         ):
           st.markdown("".join(accumulated_tool))
+        if CONSOLE_TRACES_ENABLED:
+            tool_call_trace = f"🔍 TRACE: Tool call: {tool_call_info}"
+            print(tool_call_trace)
+            logging.info(tool_call_trace)
       # Process if content is a simple string
       elif isinstance(content, str):
         accumulated_text.append(content)
         text_placeholder.markdown("".join(accumulated_text))
+        if CONSOLE_TRACES_ENABLED:
+            string_trace = f"🔍 TRACE: String content: {content}"
+            print(string_trace)
+            logging.info(string_trace)
       # Process if invalid tool call information exists
       elif (
         hasattr(message_content, "invalid_tool_calls")
@@ -205,6 +274,10 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
           "🔧 Tool Call Information (Invalid)", expanded=True
         ):
           st.markdown("".join(accumulated_tool))
+        if CONSOLE_TRACES_ENABLED:
+            invalid_trace = f"🔍 TRACE: Invalid tool call: {tool_call_info}"
+            print(invalid_trace)
+            logging.info(invalid_trace)
       # Process if tool_call_chunks attribute exists
       elif (
         hasattr(message_content, "tool_call_chunks")
@@ -218,6 +291,10 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
           "🔧 Tool Call Information", expanded=True
         ):
           st.markdown("".join(accumulated_tool))
+        if CONSOLE_TRACES_ENABLED:
+            chunk_trace = f"🔍 TRACE: Tool call chunk: {tool_call_chunk}"
+            print(chunk_trace)
+            logging.info(chunk_trace)
       # Process if tool_calls exists in additional_kwargs (supports various model compatibility)
       elif (
         hasattr(message_content, "additional_kwargs")
@@ -229,6 +306,10 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
           "🔧 Tool Call Information", expanded=True
         ):
           st.markdown("".join(accumulated_tool))
+        if CONSOLE_TRACES_ENABLED:
+            kwargs_trace = f"🔍 TRACE: Tool call from additional_kwargs: {tool_call_info}"
+            print(kwargs_trace)
+            logging.info(kwargs_trace)
     # Process if it's a tool message (tool response)
     elif isinstance(message_content, ToolMessage):
       accumulated_tool.append(
@@ -236,10 +317,13 @@ def get_streaming_callback(text_placeholder, tool_placeholder):
       )
       with tool_placeholder.expander("🔧 Tool Call Information", expanded=True):
         st.markdown("".join(accumulated_tool))
+      if CONSOLE_TRACES_ENABLED:
+          tool_msg_trace = f"🔍 TRACE: Tool message: {message_content.content}"
+          print(tool_msg_trace)
+          logging.info(tool_msg_trace)
     return None
 
   return callback_func, accumulated_text, accumulated_tool
-
 
 async def process_query(query, text_placeholder, tool_placeholder, timeout_seconds=60):
   """
@@ -261,6 +345,12 @@ async def process_query(query, text_placeholder, tool_placeholder, timeout_secon
   """
   try:
     if st.session_state.agent:
+      if CONSOLE_TRACES_ENABLED:
+          query_start = f"🔍 TRACE: Processing query: {query}"
+          print(query_start)
+          logging.info(query_start)
+          print("=" * 60)
+      
       streaming_callback, accumulated_text_obj, accumulated_tool_obj = (
         get_streaming_callback(text_placeholder, tool_placeholder)
       )
@@ -277,8 +367,19 @@ async def process_query(query, text_placeholder, tool_placeholder, timeout_secon
           ),
           timeout=timeout_seconds,
         )
+        
+        if CONSOLE_TRACES_ENABLED:
+            query_complete = f"🔍 TRACE: Query completed successfully"
+            print(query_complete)
+            logging.info(query_complete)
+            print("=" * 60)
+            
       except asyncio.TimeoutError:
         error_msg = f"⏱️ Request time exceeded {timeout_seconds} seconds. Please try again later."
+        if CONSOLE_TRACES_ENABLED:
+            timeout_trace = f"🔍 TRACE: Timeout error: {error_msg}"
+            print(timeout_trace)
+            logging.error(timeout_trace)
         return {"error": error_msg}, error_msg, ""
 
       final_text = "".join(accumulated_text_obj)
@@ -294,8 +395,11 @@ async def process_query(query, text_placeholder, tool_placeholder, timeout_secon
     import traceback
 
     error_msg = f"❌ Error occurred during query processing: {str(e)}\n{traceback.format_exc()}"
+    if CONSOLE_TRACES_ENABLED:
+        exception_trace = f"🔍 TRACE: Exception: {error_msg}"
+        print(exception_trace)
+        logging.error(exception_trace)
     return {"error": error_msg}, error_msg, ""
-
 
 success = st.session_state.event_loop.run_until_complete(
   initialize_session()
