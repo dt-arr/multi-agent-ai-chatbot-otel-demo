@@ -1,6 +1,6 @@
 # Multi-Agent AI Chatbot with OTEL Demo
 
-Inspirated by [FinancialAIAgent-LangChain-repo](https://github.com/Dynatrace-Asad-Ali/FinancialAIAgent-Langchain)
+Inspired by [FinancialAIAgent-LangChain-repo](https://github.com/Dynatrace-Asad-Ali/FinancialAIAgent-Langchain)
 This sample application demonstrates a multi-agent AI chatbot for financial analysis, conducting news search, fundamental review, and technical analysis. The application is built on a Single Supervisor with multiple agents architecture as described [here](https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/multi_agent/agent_supervisor.ipynb). 
 
 The multiple agents use OpenAI LLM models and TavilySearch tool for news search, plus Yahoo Finance for fundamental and technical analysis.
