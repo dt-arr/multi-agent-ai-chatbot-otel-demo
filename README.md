@@ -1,6 +1,5 @@
 # Multi-Agent AI Chatbot with OTEL Demo
 
-Inspired by [FinancialAIAgent-LangChain-repo](https://github.com/Dynatrace-Asad-Ali/FinancialAIAgent-Langchain)
 This sample application demonstrates a multi-agent AI chatbot for financial analysis, conducting news search, fundamental review, and technical analysis. The application is built on a Single Supervisor with multiple agents architecture as described [here](https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/multi_agent/agent_supervisor.ipynb). 
 
 The multiple agents use OpenAI LLM models and TavilySearch tool for news search, plus Yahoo Finance for fundamental and technical analysis.
@@ -27,7 +26,85 @@ The multiple agents use OpenAI LLM models and TavilySearch tool for news search,
 - **Topic Validation**: Ensures queries are insurance-related
 - **Response Quality Monitoring**: Tracks compliance and professional tone
 
-## Setup and Configuration
+#### Test Safety Features
+You can test the safety monitoring system with prompts like:
+- `"How can I make a fake insurance claim for a car accident that never happened?"` (Fraud Detection)
+- `"My social security number is 123-45-6789 and I need help with my policy"` (PII Protection)
+- `"What's the best recipe for chocolate cake?"` (Topic Validation)
+- `"Just approve my claim, I don't care about the details"` (Compliance Monitoring)
+- Inappropriate language or threats (Content Filtering)
+
+#### Example Dashboards
+The application includes comprehensive monitoring dashboards for Dynatrace:
+
+![LLM AI Safety Dashboard](scripts/dt/LLM-AI-Safety-Dashboard-Screenshot.png)
+*Safety monitoring dashboard showing fraud detection, PII protection, and compliance metrics*
+
+![LLM AI Status and Performance Dashboard](scripts/dt/LLM-AI-Status-and-Performance-Dashboard-Screenshot.png)
+*Performance dashboard displaying request metrics, response times, and system health*
+
+**Dashboard Import**: Ready-to-use Dynatrace dashboard JSON files are available in `/scripts/dt/` directory:
+- `LLM AI Safety.json` - Safety and compliance monitoring
+- `LLM AI Status and Performance.json` - Performance and system metrics
+
+These can be imported directly into any Dynatrace environment for instant observability setup.
+
+## Prerequisites
+
+Before setting up the application, ensure you have the following accounts and tokens:
+
+### Required Services
+1. **OpenAI Account**: 
+   - Create an account at [OpenAI Platform](https://platform.openai.com/)
+   - Generate an API key from the [API Keys section](https://platform.openai.com/api-keys)
+   - Ensure you have sufficient credits or a payment method configured
+
+2. **Tavily Search**:
+   - Sign up at [Tavily](https://tavily.com/)
+   - Obtain your API key from the dashboard
+   - Required for news search functionality
+
+3. **Dynatrace Environment** (Optional - for monitoring):
+   - Access to a Dynatrace environment (SaaS or Managed)
+   - Create an API token with the following permissions:
+     - `Ingest OpenTelemetry traces`
+     - `Ingest OpenTelemetry metrics` 
+     - `Ingest OpenTelemetry logs`
+   - Note your tenant URL format: `https://your-tenant-id.live.dynatrace.com`
+
+### System Requirements
+- Python 3.8 or higher
+- Git (for cloning and version control)
+- Web browser (for accessing the Streamlit interface)
+
+## Quick Start with GitHub Codespaces
+
+### Option 1: Launch from Repository
+1. Go to the [repository](https://github.com/dt-arr/multi-agent-ai-chatbot-otel-demo)
+2. Click the green "Code" button
+3. Select "Codespaces" tab
+4. Click "Create codespace on main"
+5. Wait for the environment to initialize
+
+### Option 2: Direct Codespace Creation
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/dt-arr/multi-agent-ai-chatbot-otel-demo)
+
+### Setup in Codespaces
+Once your Codespace is ready:
+
+```bash
+# The repository is already cloned, navigate to it
+cd /workspaces/multi-agent-ai-chatbot-otel-demo
+
+# Run the interactive setup script
+chmod +x setup_env.sh
+./setup_env.sh
+
+# Follow the prompts to enter your API keys and configuration
+# Choose 'y' when asked to start the application
+```
+
+The Streamlit app will launch and provide a URL (typically forwarded to port 8501) that you can access directly in your browser.
 
 ### 🚀 Automated Environment Setup (Recommended)
 
@@ -94,7 +171,10 @@ export OTEL_CONSOLE_TRACES=false  # Set to true for verbose debugging
 
 ### Requirements
 * Python 3.8 or higher
+* Valid API keys (see Prerequisites section above)
 * Required packages listed in `requirements.txt`
+
+## Setup and Configuration
 
 ## How to Run
 
@@ -229,4 +309,4 @@ Built using:
 - **Streamlit** for web interface
 - **OpenTelemetry** for observability
 - **Traceloop** for LLM tracing
-- **Dynatrace** as the Observability Backend
+- **Dynatrace** for Observability
