@@ -4,6 +4,7 @@
 __pycache__/
 setEnv.creds.sh
 temp/.env.local
-
+.env.local
+temp/*
 # Virtual environment
 financial-agent/
