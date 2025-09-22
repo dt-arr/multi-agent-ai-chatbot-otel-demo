@@ -4,6 +4,8 @@ This sample application demonstrates a multi-agent AI chatbot for financial anal
 
 The multiple agents use OpenAI LLM models and TavilySearch tool for news search, plus Yahoo Finance for fundamental and technical analysis.
 
+Inspired by: [FinancialAIAgent-Langchain](https://github.com/Dynatrace-Asad-Ali/FinancialAIAgent-Langchain).
+
 ## Features
 
 ### Multi-Agent Architecture
