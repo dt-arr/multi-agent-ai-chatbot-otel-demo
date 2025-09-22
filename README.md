@@ -11,11 +11,11 @@ The multiple agents use OpenAI LLM models and TavilySearch tool for news search,
 - **Fundamental Agent**: Performs fundamental analysis of stocks
 - **Technical Agent**: Conducts technical analysis
 - **Humorous News Agent**: Provides lighter financial news content
-- **Insurance Agent**: RAG-based policy information with comprehensive safety monitoring
+- **Insurance Agent**: RAG-based policy information with safety monitoring
 
 ### Insurance Agent Capabilities
 - **RAG-based Policy Retrieval**: Uses vector embeddings to find relevant policy information
-- **Comprehensive Safety Monitoring**: Multiple layers of safety checks with detailed telemetry
+- **Safety Monitoring**: Multiple layers of safety checks with detailed telemetry
 - **Customizable Policy Data**: Modify `insurance_policy.txt` to customize demo content
 - **Advanced Telemetry**: Extensive OpenTelemetry instrumentation for monitoring
 
@@ -35,7 +35,7 @@ You can test the safety monitoring system with prompts like:
 - Inappropriate language or threats (Content Filtering)
 
 #### Example Dashboards
-The application includes comprehensive monitoring dashboards for Dynatrace:
+The application includes monitoring dashboards for Dynatrace:
 
 ![LLM AI Safety Dashboard](scripts/dt/LLM-AI-Safety-Dashboard-Screenshot.png)
 *Safety monitoring dashboard showing fraud detection, PII protection, and compliance metrics*
@@ -229,7 +229,7 @@ streamlit run main.py
 ## Usage
 The application uses Streamlit to create a web interface accessible through your browser. Once launched, it displays the URL to access the chatbot UI.
 
-The supervisor agent coordinates between multiple specialized agents, providing users with comprehensive financial and insurance assistance through a conversational interface.
+The supervisor agent coordinates between multiple specialized agents, providing users with financial and insurance assistance through a conversational interface.
 
 ## Instrumentation and Monitoring
 
