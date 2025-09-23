@@ -6,6 +6,8 @@ The multiple agents use OpenAI LLM models and TavilySearch tool for news search,
 
 Inspired by: [FinancialAIAgent-Langchain](https://github.com/Dynatrace-Asad-Ali/FinancialAIAgent-Langchain).
 
+⭐ **If you find this demo helpful, please consider giving it a star!** ⭐
+
 ## Features
 
 ### Multi-Agent Architecture
