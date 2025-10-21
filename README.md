@@ -311,6 +311,5 @@ Built using:
 - **LangChain** for LLM orchestration
 - **LangGraph** for multi-agent workflows
 - **Streamlit** for web interface
-- **OpenTelemetry** for observability
-- **Traceloop** for LLM tracing
-- **Dynatrace** for Observability
+- **Traceloop** SDK for OpenTelemetry-based LLM observability
+- **Dynatrace** as the Observability backend to analyse Spans
