@@ -263,7 +263,7 @@ Enable console tracing for detailed debugging:
 ```bash
 export OTEL_CONSOLE_TRACES=true
 ```
-**⚠️ Warning**: This makes console output extremely verbose and should only be used for debugging.
+**⚠️ Warning**: This makes console output extremely verbose and should only be used for ~~debugging~~ fun and confirmation that the spans are created.
 
 ## Customization
 
